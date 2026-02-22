@@ -1,431 +1,173 @@
-# VitalPath AI — Real-Time EMS Navigation, Triage & Algorithmic Routing Telemetry
+# VitalPath AI - Real-World Organ Transport Workflow
 
-![status](https://img.shields.io/badge/status-hackathon%20prototype-orange)
-![domain](https://img.shields.io/badge/domain-healthcare%20%26%20re--engineering-blue)
-![frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61dafb)
-![backend](https://img.shields.io/badge/backend-FastAPI-009688)
-![maps](https://img.shields.io/badge/maps-MapLibre%20%2B%20OpenStreetMap-2e7d32)
-![telemetry](https://img.shields.io/badge/telemetry-Recharts-ff4081)
-![python](https://img.shields.io/badge/python-3.10%2B-3776ab)
-![node](https://img.shields.io/badge/node-18%2B-339933)
-![license](https://img.shields.io/badge/license-MIT-lightgrey)
+1. Mission Creation (Dispatch)
+2. Route Planning and Dispatch
+3. Vehicle Preparation
+4. Transport and Real-Time Monitoring
+5. Dynamic Adjustments
+6. Arrival and Verification
+7. Post-Mission Review
 
-> **Not a medical device. Not for real patient care or live dispatch.**  
-> VitalPath AI is a hackathon prototype built to demonstrate how modern routing + UI telemetry + AI can reduce cognitive load and improve arrival times in emergency response.
+## Workflow Detail
 
-### 🏅**Winner:** [York Region's Best Community Impact Hack Winner](https://ctrl-hack-del-2.devpost.com)
+### 1. Mission Creation (Dispatch)
+Trigger: A hospital identifies an organ ready for transport.
 
-### Links:
-**[Youtube Demonstration & Showcase Video](https://www.youtube.com/watch?v=_uR9GesJHUE)**
+Donor hospital inputs:
+- Organ type (heart, kidney, liver, etc.)
+- Required delivery timeline
+- Pickup location
 
-**[Devpost Project Link](https://devpost.com/software/vitalpath-ai)**
+Backend evaluates max safe transport time and organ-specific constraints:
+- Heart: 4 to 6 hours
+- Kidney: 24 to 36 hours
+- Liver: 8 to 12 hours
 
----
+Backend decides transport mode:
+- Road: if ETA fits the organ max time
+- Air: if distances are long or the road ETA exceeds the safe window
 
-## Executive summary
+VitalPath role:
+Automatically generates the mission object (donor, recipient, organ type, transport mode) and stores it in the system.
 
-**VitalPath AI** is a paramedic/first-responder “mission control” dashboard that combines:
+### 2. Route Planning and Dispatch
+Backend retrieves real-time routing data using Google Maps Platform:
+- Routes API for routing and ETA
+- Places API (New) for search and geocoding
 
-- **Road-law–aware routing** on real OpenStreetMap drive networks (directed roads, one-ways)
-- **GPS-style simulation** + turn-by-turn navigation telemetry (ETA, next maneuver, distance to next)
-- **AI triage assistant** (Gemini) with optional **text-to-speech** (ElevenLabs)
-- A demo-ready **Algorithmic Race** mini-map (Dijkstra vs **Duan–Mao BM-SSSP**) with **Bloomberg-style telemetry**, KPI strip, trend lines, histograms, and a built-in benchmark runner
+Routing generates:
+- Full route coordinates
+- Turn-by-turn navigation
+- ETA for each leg
 
-**Goal:** reduce navigation errors and re-route latency so response teams can push toward **York Region’s ~6-minute response-time objective** (our demo target KPI). 
+System sends route and mission info to the vehicle dispatch team.
 
-We focus on two practical levers:
-1) reduce wrong turns + missed maneuvers under stress, and  
-2) re-route faster and more reliably under disruptions (closures/incidents).
+VitalPath role:
+Ensures the transport team knows the fastest, safest route while respecting organ-specific constraints.
 
----
+### 3. Vehicle Preparation
+Vehicle team checks:
+- Organ transport container is pre-cooled
+- Sensors operational (temperature, shock, lid, battery)
+- GPS/telemetry device installed
+- Organ loaded into container
 
-## Demo highlights
+Vehicle is activated in VitalPath to start mission tracking.
 
-### 1) End-to-end EMS dashboard loop
-- Dispatch + vitals + navigation panels around a live map
-- Real route computation and a moving vehicle marker (follow camera)
-- AI assistant produces concise, EMS-style bullet guidance
+VitalPath role:
+Monitors vehicle status and container telemetry in real time.
 
-### 2) Dev Mode + Algorithmic Race
-- Bottom-left **DEV button** opens:
-  - Tactical injection scenarios (two demo scenarios)
-  - “Algorithm Comparison” quick stats
-  - Road disruption injection (re-route while moving)
-- Bottom-right **Algorithmic Race mini-map**
-  - Dijkstra vs Duan–Mao BM-SSSP exploration replay
-  - Expand into an overlay panel with:
-    - KPI header row (winner, speedup, explored Δ, ETA Δ)
-    - live trend lines (exploration vs time, completion %)
-    - histogram (route segment length distribution)
-    - **Benchmark Mode** (RUN 20×) + exec-time histograms + P50/P90
+### 4. Transport and Real-Time Monitoring
+Vehicle begins journey:
+- Dashboard shows live location, ETA, and turn-by-turn navigation
 
----
+Telemetry streams to backend:
+- Temperature
+## Setup & Run
 
-## Features
+# VitalPath AI - Overview
 
-### Routing & Navigation
-- **OSM drive network routing** via OSMnx + NetworkX (directed graph)
-- **Geocode + Autocomplete**:
-  - `/api/algo/geocode?q=...`
-  - `/api/algo/autocomplete?q=...` (bounded to York Region viewbox)
-- **Polyline generation** uses edge geometry for accurate map rendering (no straight-line node hopping)
-- **Snapped start/end** to nearest drivable nodes (prevents “inside buildings” drift)
-- **Live navigation telemetry** derived from route geometry:
-  - total distance / total time
-  - cumulative distance/time arrays aligned to polyline points
-  - maneuver steps (“turn left/right/slight/continue”) from bearings + street changes
-- **Scenario speed profiles** (Routine / Trauma / Cardiac Arrest) influence travel-time model
+VitalPath AI is an AI-powered safety guardian for life-critical medical shipments (organs, blood, vaccines) that monitors cargo conditions, determines the best route and transport mode, and helps transport teams act quickly if something goes wrong.
 
-### Re-route under disruption
-- **Roadblock injection** while sim is running
-- Background re-route swaps routes seamlessly:
-  - avoids “teleporting through buildings”
-  - will backtrack along the existing route if snap points differ
+## Key Workflow
 
-### Algorithmic Race mini-map
-- **Dijkstra vs Duan–Mao BM-SSSP** replay loop (exploration + final path)
-- Faint street-network layer so it reads as “streets” (not just nodes)
-- Expand overlay panel includes:
-  - **KPI header row** (winner, speedup, explored Δ, ETA Δ)
-  - **Trend lines** (explored edges over time, completion %)
-  - **Histogram** (route segment-length distribution)
-  - **Benchmark Mode** (RUN 20×) exec-time histograms + summary stats
+1. **Mission Creation:** Hospital identifies an organ ready for transport. Backend evaluates constraints and decides transport mode (road/air).
+2. **Route Planning:** Backend uses Google Maps Platform (Routes & Places APIs) to generate route, ETA, and navigation. Dispatch team receives route info.
+3. **Vehicle Preparation:** Transport container is prepped, sensors checked, vehicle activated in VitalPath for tracking.
+4. **Transport & Monitoring:** Vehicle begins journey, dashboard shows live location and telemetry. Backend compares sensor data to safe thresholds, AI evaluates cargo integrity and risk.
+5. **Dynamic Adjustments:** Backend recalculates routes for disruptions (traffic, closures, weather), UI updates automatically.
+6. **Arrival & Verification:** Arrival time, final telemetry, and alerts logged. AI generates mission summary.
+7. **Post-Mission Review:** Operations team reviews logs, routes, and AI recommendations for continuous improvement.
 
-### UI/UX (glanceable EMS dashboard)
-- High-contrast “mission control” layout
-- Live map in the center with camera-follow mode
-- Panels:
-  - Dispatch feed
-  - Navigation (turn-by-turn)
-  - Patient vitals
-  - Hospital info
-  - Equipment diagnostics
+## Core Features
 
-### AI (Geminai) + Voice (ElevenLabs)
-- Gemini triage assistant: `/api/ai/chat`
-  - EMS-style: concise bullet points only
-- ElevenLabs TTS: `/api/ai/speak` (optional)
-- Local audio fallbacks in `frontend/public/audio/` for demos
-- Browser autoplay protection handling (header click primes audio)
-
----
-
-## Duan–Mao BM-SSSP vs Dijkstra
-
-### Baseline: Dijkstra (NetworkX)
-Dijkstra is the standard single-source shortest path approach with non-negative weights. In this repo it is used via NetworkX on the directed OSM graph, weighted by edge length.
-
-### Experimental accelerator: Duan–Mao BM-SSSP (“Breaking the Sorting Barrier”)
-Recent research (Duan et al.) describes a deterministic directed SSSP algorithm with improved asymptotic runtime in certain models, often described as “breaking the sorting barrier.”
-
-In VitalPath AI, BM-SSSP is integrated as:
-- A **TypeScript Node runner** (`backend/bmssp-runner/`) invoked by the Python backend
-- Backend converts the OSMnx graph into an edge list and requests a predecessor tree
-- Path is reconstructed from predecessors; exploration lines are derived from predecessor edges
-- A **persistent Node server runner** (`server.mjs`) is used by default to avoid per-request Node startup overhead
-- If BM-SSSP fails, VitalPath AI **falls back to Dijkstra** automatically (demo reliability)
-
-**References**
-- Paper: https://arxiv.org/abs/2504.17033  
-- Runner inspiration: https://github.com/Braeniac/bm-sssp
-
-> Reality check: BM-SSSP may not beat Dijkstra on small graphs due to constants and overhead.  
-> That’s exactly why VitalPath AI ships both — and visualizes the tradeoffs clearly via telemetry + benchmarks.
-
----
-## Benchmarks & Figures
-
-The figures below are generated by the repo’s benchmark pipeline:
-- `backend/bench/run_bench.py` (collects JSONL latency measurements), and
-- `docs/bench/make_figures.py` (renders charts into `docs/figures/`)
-
-### Algorithm latency (lower is better)
-![Algorithm latency boxplot](docs/figures/latency_boxplot_algo_time.png)
-![Algorithm latency CDF](docs/figures/latency_cdf_algo_time.png)
-
-### End-to-end request latency
-![Total latency boxplot](docs/figures/latency_boxplot_total_time.png)
-
-### Speedup distribution (Dijkstra / BM-SSSP)
-![Speedup histogram](docs/figures/speedup_hist.png)
-
-### Exploration footprint (optional run)
-![Explored vs algorithm time](docs/figures/explored_vs_algo_time.png)
-
-#### Generate / refresh the figures
-```bash
-# 0) Start backend on :8000 (see Setup & Run below)
-# 1) Run benchmarks (writes JSONL to docs/bench/)
-python backend/bench/run_bench.py --trials 20 --warmups 3 --tag bench --out-dir docs/bench
-
-# Optional: include exploration counts for explored-vs-time figure
-python backend/bench/run_bench.py --include-exploration --trials 5 --warmups 1 --tag exploration --out-dir docs/bench
-
-# 2) Render PNGs into docs/figures/
-python docs/bench/make_figures.py --bench-dir docs/bench --out docs/figures --theme dark
-```
-
----
+- **Organ-Aware Routing:** Mode and route chosen based on organ type, max safe time, and real-world constraints.
+- **Real-Time Simulation:** Map displays route, vehicle moves in real time, navigation and ETA update continuously.
+- **Cargo Monitoring:** Real-time sensor data (temperature, shock, lid, battery, elapsed time) shown; AI evaluates viability.
+- **Alerts & Risk Assessment:** Alerts triggered for unsafe readings; AI provides recommendations and risk status.
+- **AI Assistance:** Users can ask about viability, transport mode, and risk; AI answers based on current context.
+- **Mission Log:** All events (alerts, route changes, recommendations, trip start/finish) are logged for review.
 
 ## Architecture
 
-**Frontend (React/Vite)**
-- MapLibre GL renders:
-  - route polyline
-  - vehicle marker + follow camera
-  - AlgoRace minimap overlays + telemetry panel
-- Panels provide EMS-centric information density
-
-**Backend (FastAPI)**
-- OSMnx downloads/cache road graph corridor
-- Computes shortest path (Dijkstra or BM-SSSP)
-- Builds polyline, steps, cumulative distance/time arrays
-- Provides optional exploration + faint network segments for visualization
-- Exposes AI endpoints (Gemini + optional ElevenLabs)
-
----
-
-## Repository layout
-
-```text
-.
-├─ .gitignore
-├─ README.md
-├─ package-lock.json
-├─ docs/
-│  └─ algorithm_for_map.pdf
-├─ backend/
-│  ├─ .env.example
-│  ├─ diagnostics.py
-│  ├─ requirements.txt
-│  ├─ bmssp-runner/
-│  │  ├─ package.json
-│  │  ├─ run.mjs
-│  │  └─ server.mjs
-│  └─ app/
-│     ├─ __init__.py
-│     ├─ main.py
-│     ├─ services/
-│     │  ├─ __init__.py
-│     │  ├─ gemini.py
-│     │  └─ voice.py
-│     └─ algorithm/
-│        ├─ __init__.py
-│        ├─ router.py
-│        └─ __pycache__/
-│           └─ router.cpython-311.pyc
-└─ frontend/
-   ├─ index.html
-   ├─ package.json
-   ├─ package-lock.json
-   ├─ postcss.config.js
-   ├─ tailwind.config.js
-   ├─ vite.config.ts
-   ├─ public/
-   │  └─ audio/
-   │     ├─ arrest.mp3
-   │     ├─ routine.mp3
-   │     └─ trauma.mp3
-   ├─ dist/
-   │  ├─ index.html
-   │  ├─ audio/
-   │  │  ├─ arrest.mp3
-   │  │  ├─ routine.mp3
-   │  │  └─ trauma.mp3
-   │  └─ assets/
-   │     ├─ index-COSicwxP.js
-   │     └─ index-dBP8aut8.css
-   └─ src/
-      ├─ main.tsx
-      ├─ App.tsx
-      ├─ index.css
-      ├─ hooks/
-      │  └─ useTextToSpeech.ts
-      ├─ constants/
-      │  ├─ routeData.ts
-      │  └─ scenarios.ts
-      └─ components/
-         ├─ WelcomeScreen.tsx
-         ├─ Map.tsx
-         ├─ AlgoRaceMiniMap.tsx
-         ├─ AlgoRaceCharts.tsx
-         ├─ AlgoBenchmarkCharts.tsx
-         ├─ dev/
-         │  └─ ScenarioInjector.tsx
-         └─ panels/
-            ├─ AIAssistant.tsx
-            ├─ DispatchFeed.tsx
-            ├─ Navigation.tsx
-            ├─ PatientVitals.tsx
-            └─ HospitalInfo.tsx
-```
-
----
+- **Frontend:** React + Vite, MapLibre GL for map, panels for mission details, navigation, vitals, hospital info, AI chat, and telemetry. High-contrast dashboard layout.
+- **Backend:** FastAPI (Python), Google Routes & Places APIs, Gemini AI, ElevenLabs voice, normalizes responses, manages telemetry, alerts, and mission logs.
+- **Algorithmic Race:** Dijkstra vs Duan–Mao BM-SSSP for route computation, visualized in the UI with benchmarks and telemetry.
 
 ## Setup & Run
 
-> **If you see `ECONNREFUSED 127.0.0.1:8000` in the Vite console:** the backend is not running. Start it first (step 1 below) in a separate terminal and leave it running.
+**Prerequisites:** Python 3.10+, Node.js 18+, C/C++ build tools (Windows)
 
-### Prerequisites
-- **Python 3.10+** (3.11 recommended)
-- **Node.js 18+**
-- A C/C++ build toolchain may be required on Windows for some Python wheels
-
-### 1) Backend (FastAPI) — start this first
-The frontend proxies `/api/*` to `http://127.0.0.1:8000`. If the backend is not running, you’ll see **ECONNREFUSED** in the Vite console and a banner in the app.
-
+**Backend:**
 ```bash
 cd backend
-
 python -m venv .venv
-# macOS/Linux:
-source .venv/bin/activate
-# Windows PowerShell:
 .venv\Scripts\Activate.ps1
-
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-Leave this terminal running. You should see: `Uvicorn running on http://127.0.0.1:8000`.
-
-### 2) Frontend (Vite)
-In a **second terminal**:
-
+**Frontend:**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+Open http://localhost:5173
 
-Open:
-- http://localhost:5173
+**Configuration:**
+Copy `.env.example` to `.env` in backend. Add `GEMINI_API_KEY` and `ELEVENLABS_API_KEY` if needed.
 
-> Vite proxies `/api/*` → `http://127.0.0.1:8000` (see `frontend/vite.config.ts`)
-
----
-
-## Configuration
-
-### Environment file
-```bash
-cd backend
-cp .env.example .env
-```
-
-Optional keys (Cargo Guardian chat needs `GEMINI_API_KEY`; get one at https://aistudio.google.com/apikey):
-```env
-GEMINI_API_KEY=...
-ELEVENLABS_API_KEY=...
-```
-
-### BM-SSSP runner (Duan–Mao mode)
-Install Node runner deps:
+**BM-SSSP runner:**
 ```bash
 cd backend/bmssp-runner
 npm install
 ```
-
-Enable BM-SSSP as the default backend algorithm:
+Enable BM-SSSP:
 ```bash
 cd backend
 VITALPATH_AI_ROUTE_ALGO=bmsssp uvicorn app.main:app --reload --port 8000
 ```
 
-Notes:
-- Frontend can also request the algorithm per-route via `algorithm: "dijkstra" | "bmsssp"`
-- BM-SSSP defaults to using the persistent runner (`server.mjs`). You can disable it:
-  ```bash
-  BMSSSP_USE_SERVER=0 VITALPATH_AI_ROUTE_ALGO=bmsssp uvicorn app.main:app --reload --port 8000
-  ```
+## API Overview
 
-### AlgoRace payload caps
-```bash
-VITALPATH_AI_MAX_EXPLORATION_SEGS=2500
-VITALPATH_AI_MAX_NETWORK_SEGS=2200
-VITALPATH_AI_COORD_ROUND_DIGITS=6
-```
-
----
-
-## Commands
-
-Frontend:
-```bash
-cd frontend
-npm run build
-npm run preview
-```
-
-Backend (production-ish):
-```bash
-cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
----
-
-## API overview
-
-### Routing
 - `GET /api/algo/geocode?q=...` → `{ lat, lng, display_name }`
 - `GET /api/algo/autocomplete?q=...` → `{ results: [{ lat, lng, display_name }, ...] }`
-- `POST /api/algo/calculate` payload:
-  ```json
-  {
-    "start": {"lat": 43.86, "lng": -79.44},
-    "end":   {"lat": 43.88, "lng": -79.25},
-    "scenario_type": "ROUTINE",
-    "algorithm": "dijkstra",
-    "include_exploration": false,
-    "blocked_edges": null
-  }
-  ```
-  response includes:
-  - `path_coordinates` (polyline)
-  - `snapped_start`, `snapped_end`
-  - `total_distance_m`, `total_time_s`
-  - `cum_distance_m[]`, `cum_time_s[]`
-  - `steps[]` (maneuvers)
-  - optional AlgoRace fields:
-    - `explored_coords`, `explored_count`
-    - `network_edges_coords`
+- `POST /api/algo/calculate` with start/end, scenario, algorithm, etc. Returns route, ETA, steps, and optional exploration fields.
+- `POST /api/ai/chat` → AI response
+- `POST /api/ai/speak` → audio (if configured)
 
-### AI
-- `POST /api/ai/chat` `{ "message": "...", "context": "general" }` → `{ "response": "..." }`
-- `POST /api/ai/speak` `{ "message": "...", "context": "general" }` → `audio/mpeg` (if configured)
+## Features & Demo Highlights
 
----
-
-## AlgoRace + Benchmark
-
-1. Click **DEV** (bottom-left)
-2. Select a scenario (Cardiac Arrest / MVA Trauma)
-3. AlgoRace appears bottom-right
-4. Click **Expand** to open the overlapping telemetry panel
-5. Click **RUN 20×** to generate benchmark histograms
-
-Bench details:
-- Bench uses `include_exploration=false` to keep payloads tiny and trials fast
-- Collects `execution_time_ms` from the backend response
-
----
+- End-to-end EMS dashboard loop: dispatch, vitals, navigation, live map, AI assistant, seamless rerouting
+- Dev Mode: scenario injection, algorithm comparison, roadblock injection, benchmark mode
+- Algorithmic Race: Dijkstra vs BM-SSSP, visualized with KPIs, trend lines, histograms
+- UI/UX: high-contrast layout, panels, cinematic transitions, air-route visualization
+- AI & Voice: Gemini chat, ElevenLabs TTS, local audio fallbacks, AI-triggered dispatch
 
 ## Troubleshooting
+
+- Backend not running: Start backend first if you see ECONNREFUSED in frontend
+- Google Maps API errors: Check keys, enable APIs, check quotas
+- AlgoRace not visible: Dev mode must be enabled and scenario injected
+
+## Data Attribution & Licensing
+
+VitalPath AI uses OpenStreetMap data via OSMnx/Overpass and geocoding via Nominatim. OpenStreetMap data is licensed under ODbL.
+
+---
+
+VitalPath AI is a mission control simulator that combines real-time mapping, AI conversation, voice synthesis, and cargo telemetry to demonstrate how technology can improve organ transport outcomes.
 
 ### First scenario route feels slow
 OSMnx may be cold-starting (graph download/build cache).
 - Run each scenario once beforehand (warm cache), then it’s much faster.
 
-### “Navigation Fault: scikit-learn must be installed…”
-OSMnx nearest-node on lat/lon graphs uses BallTree:
-```bash
-pip install scikit-learn
-```
-
-### Nominatim returns no results / rate limiting
-Nominatim is rate-limited; VitalPath AI enforces a minimum interval and caches results.
-If you’re offline, use the dev scenarios.
+### Google Maps API errors
+If routing or search fails, check:
+- `GOOGLE_MAPS_SERVER_KEY` in `backend/.env`
+- API enablement: **Routes API** + **Places API (New)**
+- Quotas / billing on the Google Cloud project
 
 ### AlgoRace not visible
 AlgoRace is shown when:
@@ -434,32 +176,7 @@ AlgoRace is shown when:
 
 ---
 
-## Future Roadmap
-- Offline prebuilt York Region road graph (no Overpass dependency)
-- Real incident/closure feeds (auto re-route)
-- Multi-destination recommendation (nearest appropriate facility)
-- Better maneuver modeling (roundabouts, turn restrictions, lane guidance)
-- Audit logging + replay (privacy-safe)
-
----
-
 ## Data attribution & licensing
 VitalPath AI uses **OpenStreetMap** data via OSMnx / Overpass and geocoding via Nominatim.
 OpenStreetMap data is licensed under **ODbL** — see https://www.openstreetmap.org/copyright.
-
----
-
-## License
-
-Refer to the MIT License
-
-## Team Information
-
-> This project was created by Team **Instigate Cafe** @ the CTRL+HACK+DEL 2.0 Hackathon
-
-Team Members:
-[Sukesan Selvaraveendran](https://www.linkedin.com/in/sukesan/)
-[Sanchit Das](https://www.linkedin.com/in/sanchitdas/)
-[Nithursan Jeyabalasingam](https://www.linkedin.com/in/nithursanj/)
-[Yazanth Vickneswaran](https://www.linkedin.com/in/yazanth-vickneswaran/)
 
