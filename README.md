@@ -177,6 +177,6 @@ AlgoRace is shown when:
 ---
 
 ## Data attribution & licensing
-VitalPath AI uses **OpenStreetMap** data via OSMnx / Overpass and geocoding via Nominatim.
+VitalPath AI uses **OpenStreetMap** data via Google Routes Browser and Server API Key.
 OpenStreetMap data is licensed under **ODbL** — see https://www.openstreetmap.org/copyright.
 
